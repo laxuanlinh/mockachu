@@ -9,7 +9,6 @@ export async function GET(request: Request) {
 
 export async function POST(request: Request) {
     const columns: Column[] = await request.json();
-    // console.log("Receiving request to generate for the following columns "+JSON.stringify(columns))
     
     return Response.json(await generateSQL(columns, 100), { status: 200 });
 }

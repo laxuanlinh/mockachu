@@ -3,7 +3,9 @@ enum ColumnType {
     LAST_NAME = "LAST_NAME",
     EMAIL = "EMAIL",
     INTEGER = "INTEGER",
-    FLOAT = "FLOAT"
+    FLOAT = "FLOAT",
+    USERNAME = "USERNAME",
+    SERIAL = "SERIAL"
 }
 
 export default ColumnType
