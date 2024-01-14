@@ -2,10 +2,11 @@ import Column from "@/models/column";
 import ColumnType from "@/models/columnType";
 import firstnames from "@/mock/firstnames.json"
 import lastnames from "@/mock/lastnames.json"
+import Node from "@/models/node";
 
 export const generateSQL = async (columns: Column[], count: number) => {
     const keyValueMap: Map<string, string[]> = new Map();
-    
+    //TODO: implement Tarjan algorithm to build dependencies
     for(let col of columns){
         switch (col.type){
             case ColumnType.FIRST_NAME:
@@ -26,13 +27,18 @@ export const generateSQL = async (columns: Column[], count: number) => {
                 keyValueMap.set(col.name, getSerial(count));
                 break;
             case ColumnType.INTEGER:
-                const min: number = parseInt(new Map(Object.entries(col.options)).get("min")[0]);
-                const max: number = parseInt(new Map(Object.entries(col.options)).get("max")[0]);
-                keyValueMap.set(col.name, getRandomInteger(count, min, max));
+                const minInt: number = parseInt(new Map(Object.entries(col.options)).get("min")[0]);
+                const maxInt: number = parseInt(new Map(Object.entries(col.options)).get("max")[0]);
+                keyValueMap.set(col.name, getRandomInteger(count, minInt, maxInt));
                 break;
             case ColumnType.FLOAT:
+                const minFloat: number = parseInt(new Map(Object.entries(col.options)).get("min")[0]);
+                const maxFloat: number = parseInt(new Map(Object.entries(col.options)).get("max")[0]);
+                const decimal: number = parseInt(new Map(Object.entries(col.options)).get("decimal")[0]);
+                keyValueMap.set(col.name, getRandomFloat(count, minFloat, maxFloat, decimal));
                 break;
             default:
+                throw new Error(`Type ${col.type} is not supported`);
                 break;
         }
     }
@@ -129,4 +135,12 @@ const getRandom = (min: number, max: number) => {
     min = Math.ceil(min);
     max = Math.floor(max);
     return Math.floor(Math.random() * (max - min + 1)) + min;
+}
+
+const getRandomFloat = (count: number, min: number, max: number, decimal: number) => {
+    const result: string[] = [];
+    for (let i=0; i< count; i++){
+        result.push(""+(Math.random() * (max - min) + min).toFixed(decimal) + "")
+    }
+    return result;
 }

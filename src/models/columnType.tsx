@@ -5,7 +5,8 @@ enum ColumnType {
     INTEGER = "INTEGER",
     FLOAT = "FLOAT",
     USERNAME = "USERNAME",
-    SERIAL = "SERIAL"
+    SERIAL = "SERIAL",
+    FORMULA = "FORMULA"
 }
 
 export default ColumnType
