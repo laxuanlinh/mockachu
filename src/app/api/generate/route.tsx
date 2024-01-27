@@ -10,5 +10,5 @@ export async function GET(request: Request) {
 export async function POST(request: Request) {
     const columns: Column[] = await request.json();
     
-    return Response.json(await generateSQL(columns, 100), { status: 200 });
+    return Response.json(await generateSQL(columns, 10), { status: 200 });
 }
