@@ -6,7 +6,8 @@ import Graph from "./graph"
 
 const functionMap: Map<string, RegExp> = new Map<string, RegExp>([
     ["col", new RegExp("^(col\(.*\))$")],
-    ["string", new RegExp("^('.*')$")]
+    ["options", new RegExp("^(options\(.*\))$")],
+    ["toLowerCase", new RegExp("^(toLowerCase\(.*\))$")]
 ])
 
 export const generateSQL = async (columns: Column[], count: number) => {
@@ -100,18 +101,36 @@ const getExecutionOrder = (columns: Column[]) => {
 }
 
 const dfs = (column: Column, g: Graph, columns: Column[]) => {
-    if (column.type !== ColumnType.FORMULA){
-        return
-    }
     const value: string = new Map(Object.entries(column.options)).get("value");
-    const strArr = value.split("+");
+    let strArr = value.split(/\s?\+\s?/);
     for (let str of strArr ){
-        if (functionMap?.get("col")?.test(str)){
-            const neighbour = getColumn(columns, str.match(/col\('(.*?)'\)/)![1]);
+        const colFuncStrs = str.match(/(col\(.*?\)?)\)/);
+        if (colFuncStrs && colFuncStrs.length > 1 && colFuncStrs[1]!==""){
+            const colFuncStr = addEvenClosedBracket(colFuncStrs[1]);
+            const valueInside = removeQuote(getRealValue(colFuncStr.match(/col\((.*?\)?)\)/)![1], new Map(), 0));
+            const neighbour = getColumn(columns, valueInside);
             g.addEdge(column.index, neighbour.index);
-            dfs(neighbour, g, columns);
         }
     }
+}
+
+const addEvenClosedBracket = (item: string) => {
+    let open = 0;
+    let closed = 0;
+    let result = item;
+    for (let char of item){
+        if (char === "("){
+            open++;
+        } else if (char === ")") {
+            closed++;
+        }
+    }
+    if (closed < open){
+        for (let i = 0; i < open - closed; i++){
+            result += ")"
+        }
+    }
+    return result;
 }
 
 const getColumn = (columns: Column[], colName: string) => {
@@ -197,21 +216,12 @@ const getRandomFloat = (count: number, min: number, max: number, decimal: number
 
 const getFormula = (count: number, value: string, keyValueMap: Map<string, string[]>) => {
     const result: string[] = [];
-    const valueArr = value.split("+");
+    const valueArr = value.split((/\s?\+\s?/));
     for (let i=0; i<count; i++){
         let str = "";
         for (let item of valueArr){
             item = item.trim();
-            if (functionMap?.get("col")?.test(item)){
-                let colValue = keyValueMap?.get(item?.match(/col\('(.*?)'\)/)![1])![i];
-                if (colValue[0]==="'" && colValue[colValue.length-1]==="'"){
-                    str += removeQuote(colValue);
-                } else {
-                    str += colValue;
-                }
-            } else if (functionMap?.get("string")?.test(item)) {
-                str += item?.match(/'(.*?)'/)![1];
-            }
+            str += getRealValue(item, keyValueMap, i);
         }
         result.push("'"+str+"'");
     }
@@ -219,6 +229,41 @@ const getFormula = (count: number, value: string, keyValueMap: Map<string, strin
     return result;
 }
 
+const isFunction = (item: string) => {
+    for (let entry of Array.from(functionMap.entries())) {
+        if (entry[1].test(item)){
+            return true;
+        }
+    }
+    return false;
+}
+
+const getRealValue = (item: string, keyValueMap: Map<string, string[]>, index: number) => {
+    if (functionMap?.get("col")?.test(item)){
+        let valueInside = addEvenClosedBracket(item?.match(/col\((.*?\)?)\)/)![1]);
+        valueInside = getRealValue(valueInside, keyValueMap, index);
+        let value = keyValueMap?.get(valueInside)![index];
+        return removeQuote(value);
+    } else if (functionMap?.get("options")?.test(item)) {
+        let value = addEvenClosedBracket(item.match(/options\((.*?\)?)\)/)![1]);
+        value = getRealValue(value, keyValueMap, index);
+        const options = value.split(/\s?'?,'?\s?/);
+        return removeQuote(options[getRandom(0, options.length-1)]);
+    } else if (functionMap?.get("toLowerCase")?.test(item)) {
+        let valueInside = addEvenClosedBracket(item.match(/toLowerCase\((.*?\)?)\)/)![1]);
+        valueInside = getRealValue(valueInside, keyValueMap, index);
+        return removeQuote(valueInside.toLowerCase());
+    }
+    return removeQuote(item);
+}
+
 const removeQuote = (value: string) => {
-    return value.substring(1, value.length - 1);
+    let result = value.trim();
+    if (result[0]==="'") {
+        result = result.substring(1);
+    }
+    if (result[result.length - 1]==="'"){
+        result = result.substring(0, result.length - 1);
+    }
+    return result;
 }

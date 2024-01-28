@@ -1,0 +1,11 @@
+{
+    "configurations": [
+        {
+            "type": "chrome",
+            "name": "Debug application",
+            "request": "launch",
+            "url": "http://localhost:3000",
+            "webRoot": "${workspaceFolder}"
+        }
+    ]
+}
