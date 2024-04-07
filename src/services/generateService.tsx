@@ -101,6 +101,9 @@ const getExecutionOrder = (columns: Column[]) => {
 }
 
 const dfs = (column: Column, g: Graph, columns: Column[]) => {
+    if(!column.options) {
+        return;
+    }
     const value: string = new Map(Object.entries(column.options)).get("value");
     let strArr = value.split(/\s?\+\s?/);
     for (let str of strArr ){
@@ -108,6 +111,7 @@ const dfs = (column: Column, g: Graph, columns: Column[]) => {
         if (colFuncStrs && colFuncStrs.length > 1 && colFuncStrs[1]!==""){
             const colFuncStr = addEvenClosedBracket(colFuncStrs[1]);
             const valueInside = removeQuote(getRealValue(colFuncStr.match(/col\((.*?\)?)\)/)![1], new Map(), 0));
+            
             const neighbour = getColumn(columns, valueInside);
             g.addEdge(column.index, neighbour.index);
         }
