@@ -3,6 +3,14 @@ import logo from "../assets/pika-avatar.png";
 import logoText from "../assets/mockachu-text.png";
 import type { Property } from 'csstype';
 
+export const primaryButtonStyle = {
+    border: "1px solid black",
+    borderRadius: "5px",
+    width: "100px",
+    height: "40px",
+    lineHeight: "40px"
+}
+
 export default function Navbar(){
     const rowDirection : Property.FlexDirection = "row";
     const columnDirection : Property.FlexDirection = "column";
@@ -54,13 +62,6 @@ export default function Navbar(){
         flexDirection: columnDirection,
         justifyContent: "center"
     }
-    const signInButtonStyle = {
-        border: "1px solid black",
-        borderRadius: "5px",
-        width: "100px",
-        height: "40px",
-        lineHeight: "40px"
-    }
     return (
         <div style={navStyle}>
             <div style={logoContainerStyle}>
@@ -84,7 +85,7 @@ export default function Navbar(){
                 <div style={menuItemStyle}>About</div>
             </div>
             <div style={signinStyle}>
-                <button style={signInButtonStyle}>Sign In</button>
+                <button style={primaryButtonStyle}>Sign In</button>
             </div>
         </div>
     )

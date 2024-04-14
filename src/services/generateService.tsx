@@ -52,7 +52,7 @@ export const generateSQL = async (columns: Column[], count: number) => {
                 keyValueMap.set(col.name, getRandomFloat(count, minFloat, maxFloat, decimal));
                 break;
             case ColumnType.FORMULA:
-                const value: string = new Map(Object.entries(col.options)).get("value");
+                const value: string = new Map(Object.entries(col.options)).get("value")[0];
                 keyValueMap.set(col.name, getFormula(count, value, keyValueMap));
                 break;
             default:
@@ -85,7 +85,7 @@ export const generateSQL = async (columns: Column[], count: number) => {
             results[i] += values[i] + ", ";
         }
         results[i] = results[i].substring(0, results[i].length - 2);
-        results[i] += ")"
+        results[i] += ");"
     }
 
     return results;
@@ -104,8 +104,8 @@ const dfs = (column: Column, g: Graph, columns: Column[]) => {
     if(!column.options) {
         return;
     }
-    const value: string = new Map(Object.entries(column.options)).get("value");
-    let strArr = value.split(/\s?\+\s?/);
+    const value: string = new Map(Object.entries(column.options)).get("value")[0];
+    let strArr = value ? value.split(/\s?\+\s?/) : [];
     for (let str of strArr ){
         const colFuncStrs = str.match(/(col\(.*?\)?)\)/);
         if (colFuncStrs && colFuncStrs.length > 1 && colFuncStrs[1]!==""){
@@ -220,7 +220,7 @@ const getRandomFloat = (count: number, min: number, max: number, decimal: number
 
 const getFormula = (count: number, value: string, keyValueMap: Map<string, string[]>) => {
     const result: string[] = [];
-    const valueArr = value.split((/\s?\+\s?/));
+    const valueArr = value?.split((/\s?\+\s?/));
     for (let i=0; i<count; i++){
         let str = "";
         for (let item of valueArr){
@@ -251,7 +251,7 @@ const getRealValue = (item: string, keyValueMap: Map<string, string[]>, index: n
     } else if (functionMap?.get("options")?.test(item)) {
         let value = addEvenClosedBracket(item.match(/options\((.*?\)?)\)/)![1]);
         value = getRealValue(value, keyValueMap, index);
-        const options = value.split(/\s?'?,'?\s?/);
+        const options = value?.split(/\s?'?,'?\s?/);
         return removeQuote(options[getRandom(0, options.length-1)]);
     } else if (functionMap?.get("toLowerCase")?.test(item)) {
         let valueInside = addEvenClosedBracket(item.match(/toLowerCase\((.*?\)?)\)/)![1]);
